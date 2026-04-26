@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Card Advisor</title>
+<style>
+  /* ── Themes ── */
+  :root, [data-theme="dark"] {
+    --bg: #0F0F0F; --surface: #1A1A1A; --surface2: #252525;
+    --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.16);
+    --text: #F0F0F0; --muted: #888; --faint: #444;
+    --toggle-bg: #2A2A2A; --toggle-icon: #888;
+    --perk-bg: rgba(34,197,94,.13); --perk-color: #4ade80; --perk-border: rgba(34,197,94,.22);
+    --empty-stroke: #555;
+  }
+  [data-theme="light"] {
+    --bg: #F2F2F7; --surface: #FFFFFF; --surface2: #F0F0F5;
+    --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.16);
+    --text: #1A1A1A; --muted: #6B6B6B; --faint: #C4C4C4;
+    --toggle-bg: #E5E5EA; --toggle-icon: #555;
+    --perk-bg: rgba(22,163,74,.1); --perk-color: #15803d; --perk-border: rgba(22,163,74,.22);
+    --empty-stroke: #B8B8B8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; overscroll-behavior: none; }
+  html { transition: background .22s; }
+  body { display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .header { padding: 14px 16px 0; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .app-title { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); flex: 1; transition: color .2s; }
+
+  /* Theme toggle */
+  .theme-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--toggle-bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .22s; }
+  .theme-btn:active { opacity: .65; }
+  .theme-btn svg { width: 15px; height: 15px; stroke: var(--toggle-icon); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: stroke .22s; }
+
+  /* Amount pill */
+  .amt-pill { display: flex; align-items: center; gap: 5px; background: var(--surface); border: 1px solid var(--border2); border-radius: 999px; padding: 6px 14px; transition: background .22s, border-color .22s; }
+  .amt-prefix { font-size: 15px; color: var(--muted); transition: color .22s; }
+  .amt-input { background: transparent; border: none; width: 76px; font-size: 16px; font-weight: 500; color: var(--text); outline: none; transition: color .22s; }
+  .amt-input::placeholder { color: var(--faint); font-size: 13px; font-weight: 400; }
+
+  /* ── Results ── */
+  .results { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px 14px; margin: 0 16px 12px; flex-shrink: 0; min-height: 150px; display: flex; flex-direction: column; justify-content: center; transition: background .22s, border-color .22s; }
+  .results-empty { text-align: center; color: var(--muted); font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0; transition: color .22s; }
+
+  .cat-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 11px; transition: color .22s; }
+
+  /* #1 card */
+  .rec1 { display: flex; align-items: flex-start; gap: 11px; }
+  .rank-badge { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 3px; }
+  .rec1-body { flex: 1; min-width: 0; }
+  .rec1-name { font-size: 12px; color: var(--muted); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .22s; }
+  .rec1-mult { display: flex; align-items: baseline; gap: 6px; line-height: 1; }
+  .rec1-num { font-size: 38px; font-weight: 700; letter-spacing: -.02em; }
+  .rec1-unit { font-size: 13px; color: var(--muted); transition: color .22s; }
+  .rec1-est { font-size: 12px; color: var(--muted); margin-top: 3px; transition: color .22s; }
+  .perk-tag { display: inline-block; font-size: 11px; margin-top: 7px; padding: 3px 10px; border-radius: 999px; background: var(--perk-bg); color: var(--perk-color); border: 1px solid var(--perk-border); line-height: 1.45; transition: background .22s, color .22s, border-color .22s; }
+
+  .divider { height: 1px; background: var(--border); margin: 11px 0; transition: background .22s; }
+
+  /* #2 card */
+  .rec2 { display: flex; align-items: center; gap: 9px; }
+  .rank2-badge { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--muted); border: 1px solid var(--border2); flex-shrink: 0; transition: color .22s, border-color .22s; }
+  .rec2-body { flex: 1; display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; min-width: 0; }
+  .rec2-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 155px; }
+  .rec2-mult { font-size: 21px; font-weight: 700; }
+  .rec2-unit { font-size: 12px; color: var(--muted); transition: color .22s; }
+
+  /* All-cards bar */
+  .all-bar { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 11px; }
+  .a-pill { font-size: 10px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; transition: border-color .22s, color .22s, background .22s; }
+
+  /* ── Category Grid ── */
+  .grid-wrap { flex: 1; overflow-y: auto; padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px)); -webkit-overflow-scrolling: touch; }
+  .grid-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; transition: color .22s; }
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; min-height: 80px; user-select: none; transition: transform .08s, border-color .15s, background .22s; }
+  .tile:active { transform: scale(.95); }
+  .tile.sel { background: var(--surface2); }
+  .tile-icon svg { width: 20px; height: 20px; display: block; }
+  .tile-name { font-size: 13px; font-weight: 600; line-height: 1.2; color: var(--text); transition: color .22s; }
+  .tile-sub { font-size: 10.5px; color: var(--muted); line-height: 1.3; transition: color .22s; }
+  .tile-wide { grid-column: 1 / -1; flex-direction: row; align-items: center; min-height: 54px; gap: 10px; }
+  .tile-wide .tile-name { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <span class="app-title">Card Advisor</span>
+
+    <button class="theme-btn" id="theme-btn" aria-label="Toggle light/dark" onclick="toggleTheme()">
+      <svg id="theme-svg" viewBox="0 0 24 24">
+        <path id="theme-path"/>
+      </svg>
+    </button>
+
+    <div class="amt-pill">
+      <span class="amt-prefix">$</span>
+      <input class="amt-input" type="number" id="amt" placeholder="amount" inputmode="decimal" min="0">
+    </div>
+  </div>
+</div>
+
+<div class="results" id="results">
+  <div class="results-empty">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--empty-stroke)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2"/>
+      <path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/>
+      <path d="M12 14h.01"/>
+    </svg>
+    <span>Tap a category to see<br>which card to use</span>
+  </div>
+</div>
+
+<div class="grid-wrap">
+  <div class="grid-label">Spending Category</div>
+  <div class="cat-grid" id="cat-grid"></div>
+</div>
+
+<script>
+// ── Theme ──────────────────────────────────────────────────────────────────
+const MOON = 'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z';
+const SUN  = 'M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41M12 8a4 4 0 100 8 4 4 0 000-8z';
+
+let dark = true;
+
+(function init() {
+  const saved = localStorage.getItem('ca-theme');
+  dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(false);
+})();
+
+function toggleTheme() { dark = !dark; applyTheme(true); localStorage.setItem('ca-theme', dark ? 'dark' : 'light'); }
+
+function applyTheme(animate) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('theme-path').setAttribute('d', dark ? MOON : SUN);
+}
+
+// ── Card Data ──────────────────────────────────────────────────────────────
+const CARDS = [
+  { id:'gold', n:'Amex Gold', s:'Gold', cur:'MR pts', v:1.5, hex:'#D4A843',
+    r:{ dining:4, groceries:4, flights_d:3, flights_p:0, hotels_d:2, hotels_p:0, united:3, rideshare:0, gas:0, streaming:0, car:0, other:1 },
+    p:{ dining:'Toward $120 dining credit (Grubhub, Cheesecake Factory)', rideshare:'$120 Uber Cash/yr — use Gold for Uber', groceries:'4x capped at $25k/yr combined with dining' }},
+  { id:'plat', n:'Amex Platinum', s:'Platinum', cur:'MR pts', v:1.5, hex:'#8C8C8C',
+    r:{ dining:1, groceries:1, flights_d:5, flights_p:5, hotels_d:5, hotels_p:0, united:5, rideshare:0, gas:0, streaming:0, car:2, other:1 },
+    p:{ flights_d:'Up to $500k/yr; airline direct or via Amex Travel', hotels_d:'Eligible for $600 FHR hotel credit via Amex Travel', streaming:'$300 digital entertainment credit/yr ($25/mo)', rideshare:'$200 Uber Cash + $120 Uber One/yr', united:'5x as flights direct; also see United Club for 11x' }},
+  { id:'csr', n:'Chase Sapphire Reserve', s:'CSR', cur:'UR pts', v:1.75, hex:'#1A5EA8',
+    r:{ dining:3, groceries:1, flights_d:4, flights_p:8, hotels_d:4, hotels_p:8, united:4, rideshare:3, gas:1, streaming:1, car:8, other:1 },
+    p:{ dining:'Counts toward $300 restaurant credit ($150/6 mo)', flights_p:'Via Chase Travel portal', hotels_p:'Via Chase Travel portal', car:'Via Chase Travel portal; best trip insurance in class', rideshare:'Counts toward $300 auto travel credit' }},
+  { id:'venture', n:'Capital One Venture', s:'Venture', cur:'miles', v:1.7, hex:'#C84B2F',
+    r:{ dining:2, groceries:2, flights_d:2, flights_p:5, hotels_d:2, hotels_p:5, united:2, rideshare:2, gas:2, streaming:2, car:5, other:2 },
+    p:{ other:'Flat 2x on everything — never overthink it', flights_p:'Via Capital One Travel portal', hotels_p:'Via Capital One Travel portal', car:'Via Capital One Travel portal' }},
+  { id:'citi', n:'Citi Strata Premier', s:'Citi', cur:'TY pts', v:1.6, hex:'#0E8A68',
+    r:{ dining:3, groceries:3, flights_d:3, flights_p:10, hotels_d:3, hotels_p:10, united:3, rideshare:1, gas:3, streaming:1, car:10, other:1 },
+    p:{ flights_p:'Via Citi Travel — highest portal rate of all your cards', hotels_p:'Via Citi Travel — highest portal rate of all your cards', gas:'Includes EV charging stations', car:'Via Citi Travel — highest portal rate of all your cards' }},
+  { id:'united', n:'United Club Infinite', s:'United', cur:'miles', v:1.3, hex:'#6B65CC',
+    r:{ dining:2, groceries:1, flights_d:2, flights_p:0, hotels_d:2, hotels_p:0, united:11, rideshare:2, gas:1, streaming:1, car:0, other:1.5 },
+    p:{ united:'11x = 6x MileagePlus + 5x bonus; free bags + Club lounge + PQP toward status', rideshare:'$150 rideshare credit/yr', other:'Best base rate (1.5x) when outside bonus categories' }}
+];
+
+// ── Categories ─────────────────────────────────────────────────────────────
+const CATS = [
+  { id:'dining',    n:'Dining',           s:'Restaurants & bars',           color:'#E8734A', icon:'M3 2v6a3 3 0 006 0V2M6 11v11M15 2c0 0 0 7.5-4.5 9.5V22' },
+  { id:'groceries', n:'Groceries',        s:'Supermarkets',                 color:'#4CAF50', icon:'M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0' },
+  { id:'flights_d', n:'Flights – Direct', s:'Airline website or app',       color:'#64B5F6', icon:'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z' },
+  { id:'flights_p', n:'Flights – Portal', s:'Chase / Citi / CapOne Travel', color:'#42A5F5', icon:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10zM2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z' },
+  { id:'hotels_d',  n:'Hotels – Direct',  s:'Hotel website or app',         color:'#FFA726', icon:'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2zM9 22V12h6v10' },
+  { id:'hotels_p',  n:'Hotels – Portal',  s:'Chase / Citi / CapOne Travel', color:'#FF9800', icon:'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2zM9 22V12h6v10M20 9l1.5 1.5' },
+  { id:'united',    n:'United Airlines',  s:'Eligible United flights',       color:'#7986CB', icon:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10zM12 6v6l4 2' },
+  { id:'rideshare', n:'Uber / Rideshare', s:'Lyft, taxis, transit',          color:'#4DB6AC', icon:'M5 17H3a2 2 0 01-2-2v-4l3-8h12l3 8v4a2 2 0 01-2 2h-2M5 17v2m13-2v2m-13 0a1 1 0 100 2 1 1 0 000-2zm13 0a1 1 0 100 2 1 1 0 000-2z' },
+  { id:'gas',       n:'Gas / EV',         s:'Gas stations & EV charging',    color:'#66BB6A', icon:'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
+  { id:'streaming', n:'Streaming',        s:'Netflix, Hulu, Disney+',        color:'#BA68C8', icon:'M5 3l14 9-14 9V3z' },
+  { id:'car',       n:'Car Rental',       s:'Via portal',                    color:'#FFB74D', icon:'M16 3H1v13h15V3zM16 8h4l3 3v5h-7V8zM5.5 19a2 2 0 100-4 2 2 0 000 4zm11 0a2 2 0 100-4 2 2 0 000 4z' },
+  { id:'other',     n:'Everything Else',  s:'General purchases', wide:true,  color:'#90A4AE', icon:'M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM12 12h.01' }
+];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let selCat = null, dollarAmt = 0;
+
+// ── Build grid ─────────────────────────────────────────────────────────────
+const grid = document.getElementById('cat-grid');
+CATS.forEach(cat => {
+  const tile = document.createElement('div');
+  tile.className = 'tile' + (cat.wide ? ' tile-wide' : '');
+  tile.dataset.id = cat.id;
+  tile.innerHTML = `
+    <div class="tile-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="${cat.color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="${cat.icon}"/>
+      </svg>
+    </div>
+    <div>
+      <div class="tile-name">${cat.n}</div>
+      <div class="tile-sub">${cat.s}</div>
+    </div>`;
+  tile.addEventListener('click', () => pickCat(cat.id, tile, cat.color));
+  grid.appendChild(tile);
+});
+
+// ── Inputs ─────────────────────────────────────────────────────────────────
+document.getElementById('amt').addEventListener('input', e => {
+  dollarAmt = parseFloat(e.target.value) || 0;
+  if (selCat) render();
+});
+
+// ── Selection ──────────────────────────────────────────────────────────────
+function pickCat(id, el, color) {
+  document.querySelectorAll('.tile').forEach(t => { t.classList.remove('sel'); t.style.borderColor = ''; });
+  el.classList.add('sel');
+  el.style.borderColor = color + '70';
+  selCat = id;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Logic ──────────────────────────────────────────────────────────────────
+function getRanked(catId) {
+  return CARDS.map(c => ({ ...c, rate: c.r[catId] ?? 0 }))
+              .sort((a, b) => (b.rate * b.v) - (a.rate * a.v));
+}
+function cents(r, v) { return (r * v).toFixed(1); }
+function estLine(card) {
+  if (!dollarAmt || !card.rate) return '';
+  const pts = Math.round(dollarAmt * card.rate);
+  const val = (pts * card.v / 100).toFixed(2);
+  return `${pts.toLocaleString()} ${card.cur} ≈ $${val}`;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  const cat = CATS.find(c => c.id === selCat);
+  const ranked = getRanked(selCat);
+  const t1 = ranked[0], t2 = ranked[1];
+  const p1 = t1.p?.[selCat] ? `<span class="perk-tag">★ ${t1.p[selCat]}</span>` : '';
+  const e1 = estLine(t1), e2 = estLine(t2);
+  const pills = ranked.map((c, i) => {
+    const r = c.rate > 0 ? `${c.rate}x` : '—';
+    return i < 2
+      ? `<span class="a-pill" style="background:${c.hex}20;border-color:${c.hex}50;color:${c.hex}">${c.s} ${r}</span>`
+      : `<span class="a-pill">${c.s} ${r}</span>`;
+  }).join('');
+
+  document.getElementById('results').innerHTML = `
+    <div class="cat-eyebrow">${cat.n.toUpperCase()}</div>
+    <div class="rec1">
+      <div class="rank-badge" style="background:${t1.hex}22;color:${t1.hex}">1</div>
+      <div class="rec1-body">
+        <div class="rec1-name">${t1.n}</div>
+        <div class="rec1-mult">
+          <span class="rec1-num" style="color:${t1.hex}">${t1.rate}x</span>
+          <span class="rec1-unit">${t1.cur}&nbsp;·&nbsp;~${cents(t1.rate,t1.v)}¢/$</span>
+        </div>
+        ${e1 ? `<div class="rec1-est">${e1}</div>` : ''}
+        ${p1}
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="rec2">
+      <div class="rank2-badge">2</div>
+      <div class="rec2-body">
+        <span class="rec2-name" style="color:${t2.hex}">${t2.n}</span>
+        <span class="rec2-mult" style="color:${t2.hex}">${t2.rate}x</span>
+        <span class="rec2-unit">${t2.cur}&nbsp;·&nbsp;~${cents(t2.rate,t2.v)}¢/$${e2 ? '&nbsp;·&nbsp;'+e2 : ''}</span>
+      </div>
+    </div>
+    <div class="all-bar">${pills}</div>`;
+}
+</script>
+</body>
+</html>
