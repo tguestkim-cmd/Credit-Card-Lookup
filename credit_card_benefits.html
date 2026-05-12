@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit Card Benefits Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F8F7F4;--surface:#FFF;--surface2:#F2F1EE;--surface3:#E8E7E3;
+  --border:rgba(0,0,0,.09);--border-med:rgba(0,0,0,.14);--border-str:rgba(0,0,0,.22);
+  --text:#1A1A18;--text2:#5A5A56;--text3:#9A9A96;--text4:#C0C0BC;
+  --radius:10px;--radius-lg:14px;--radius-xl:18px;
+  --danger:#C0392B;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#141413;--surface:#1E1E1C;--surface2:#252523;--surface3:#2E2E2B;
+  --border:rgba(255,255,255,.08);--border-med:rgba(255,255,255,.13);--border-str:rgba(255,255,255,.2);
+  --text:#EDEDE8;--text2:#9A9A95;--text3:#5A5A58;--text4:#3A3A38;
+}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:0 36px}
+@media(max-width:600px){.wrap{padding:0 16px}}
+
+/* HEADER */
+.site-hdr{padding:28px 0 0}
+.site-hdr-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:20px;border-bottom:.5px solid var(--border)}
+.site-title{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;letter-spacing:-.3px}
+.site-sub{font-size:13px;color:var(--text2);margin-top:3px}
+
+/* PRIMARY NAV */
+.primary-nav{display:flex;gap:0;border-bottom:.5px solid var(--border)}
+.pnav-btn{padding:14px 22px;background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:-1px;letter-spacing:-.1px}
+.pnav-btn:hover{color:var(--text)}
+.pnav-btn.active{color:var(--text);border-bottom-color:var(--text)}
+
+/* CARD TABS */
+.card-tabs-bar{padding:22px 0 0}
+.card-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* individual tab wrapper for × positioning */
+.ctab-wrap{position:relative;display:inline-flex;align-items:center}
+.ctab{padding:8px 30px 8px 16px;border:.5px solid var(--border-med);border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;background:var(--surface);color:var(--text2);font-family:inherit;transition:all .15s;white-space:nowrap}
+.ctab:hover{background:var(--surface2)}
+.ctab.active{color:#fff;border-color:transparent}
+.ctab.active + .ctab-del{color:rgba(255,255,255,.7)}
+.ctab.active + .ctab-del:hover{color:#fff}
+.ctab-del{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;line-height:1;color:var(--text3);padding:2px 4px;font-family:inherit;transition:color .15s}
+.ctab-del:hover{color:var(--danger)}
+
+/* add card button */
+.add-card-btn{padding:7px 14px;border:.5px dashed var(--border-med);border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;background:none;color:var(--text3);font-family:inherit;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.add-card-btn:hover{border-color:var(--border-str);color:var(--text2);background:var(--surface)}
+
+/* delete confirm banner */
+.del-confirm{background:var(--surface);border:.5px solid var(--border-med);border-radius:var(--radius);padding:12px 16px;margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.del-confirm-text{font-size:13px;flex:1}
+.del-confirm-text strong{color:var(--danger)}
+.del-btn{padding:6px 14px;border-radius:var(--radius);border:.5px solid;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;transition:all .15s}
+.del-btn-confirm{background:var(--danger);color:#fff;border-color:var(--danger)}
+.del-btn-confirm:hover{opacity:.85}
+.del-btn-cancel{background:var(--surface);color:var(--text2);border-color:var(--border-med)}
+.del-btn-cancel:hover{background:var(--surface2)}
+
+/* add card form panel */
+.add-form-panel{background:var(--surface);border:.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;margin-top:14px}
+.add-form-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:540px){.form-grid{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:12px;font-weight:500;color:var(--text2)}
+.form-group input,.form-group select{padding:8px 12px;border:.5px solid var(--border-med);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;width:100%}
+.form-group input:focus{border-color:var(--border-str)}
+.form-group input[type="color"]{padding:4px 8px;height:36px;cursor:pointer}
+.form-hint{font-size:11px;color:var(--text3);margin-top:2px}
+.form-actions{display:flex;gap:8px;margin-top:4px}
+.form-save{padding:8px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;background:var(--text);color:var(--bg);transition:opacity .15s}
+.form-save:hover{opacity:.85}
+.form-cancel{padding:8px 14px;border-radius:var(--radius);border:.5px solid var(--border-med);cursor:pointer;font-size:13px;font-family:inherit;background:none;color:var(--text2)}
+.form-cancel:hover{background:var(--surface2)}
+.form-error{font-size:12px;color:var(--danger);margin-top:6px}
+
+/* MAIN */
+.main{padding:28px 0 60px}
+
+/* CARD HEADER */
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px;padding-bottom:20px;border-bottom:.5px solid var(--border)}
+.card-name{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;letter-spacing:-.2px}
+.card-fee-row{display:flex;align-items:center;gap:12px;margin-top:5px;flex-wrap:wrap}
+.card-fee{font-size:13px;color:var(--text2)}
+.card-val-badge{display:inline-block;font-size:12px;font-weight:500;padding:3px 10px;border-radius:12px}
+.refresh-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border:.5px solid var(--border-med);border-radius:var(--radius);background:var(--surface);cursor:pointer;font-size:13px;font-family:inherit;color:var(--text2);font-weight:500;transition:all .15s;flex-shrink:0}
+.refresh-btn:hover{background:var(--surface2);color:var(--text)}
+.refresh-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+@media(max-width:650px){.metrics{grid-template-columns:repeat(2,1fr)}}
+.metric{background:var(--surface2);border-radius:var(--radius);padding:14px 16px}
+.metric-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.metric-val{font-size:22px;font-weight:600;letter-spacing:-.5px}
+
+/* SECTIONS */
+.section{margin-bottom:28px}
+.sec-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+
+/* BENEFIT CARDS */
+.bg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.ben{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;transition:border-color .15s}
+.ben:hover{border-color:var(--border-med)}
+.ben-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px}
+.ben-vendor{font-size:13px;font-weight:500;line-height:1.35;flex:1}
+.ben-amount{font-size:18px;font-weight:600;white-space:nowrap;letter-spacing:-.5px;flex-shrink:0}
+.ben-freq{font-size:11px;color:var(--text2);margin-bottom:7px}
+.ben-note{font-size:11px;color:var(--text3);border-top:.5px solid var(--border);padding-top:8px;line-height:1.55}
+.custom-empty{background:var(--surface2);border-radius:var(--radius-lg);padding:24px;text-align:center;font-size:13px;color:var(--text3);line-height:1.6}
+
+/* STATUS */
+.status-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.status-item{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;display:flex;align-items:center;gap:11px}
+.status-ico{font-size:22px;flex-shrink:0}
+.status-name{font-size:13px;font-weight:500}
+.status-tier{font-size:11px;color:var(--text2);margin-top:2px}
+.lounge-box{background:var(--surface2);border-radius:var(--radius);padding:13px 16px;font-size:13px;color:var(--text2);display:flex;gap:10px;align-items:flex-start;line-height:1.6}
+.partner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.partner{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px}
+.partner-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.partner-note{font-size:11px;color:var(--text2);line-height:1.5}
+.excl-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-bottom:5px;background:#FEF3C7;color:#78350F}
+.shop-chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:5px 12px;background:var(--surface);border:.5px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2)}
+
+/* INFO CHIPS (for perk bullets) */
+.perk-list{display:flex;flex-direction:column;gap:8px}
+.perk-item{background:var(--surface2);border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--text2);display:flex;gap:10px;align-items:flex-start;line-height:1.55}
+.perk-ico{font-size:16px;flex-shrink:0;margin-top:1px}
+
+/* AI BOX */
+.ai-box{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;margin-top:8px}
+.ai-box-hdr{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.ai-content{font-size:13.5px;line-height:1.75}
+.ai-stamp{font-size:11px;color:var(--text3);margin-top:10px;padding-top:10px;border-top:.5px solid var(--border)}
+.ai-hint{font-size:13px;color:var(--text2);padding:4px 0}
+
+/* ══ SPEND OPTIMIZER ══ */
+.opt-intro{font-size:14px;color:var(--text2);padding:22px 0 4px;line-height:1.65}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:8px;margin:18px 0 28px}
+.cat-tile{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 12px;cursor:pointer;text-align:center;transition:all .15s;user-select:none}
+.cat-tile:hover{border-color:var(--border-med);background:var(--surface2)}
+.cat-tile.sel{border-width:1.5px;border-color:var(--text);background:var(--surface2)}
+.cat-ico{font-size:28px;margin-bottom:8px}
+.cat-name{font-size:12px;font-weight:600;line-height:1.3}
+.cat-desc{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.3}
+.rec-panel{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:60px}
+.rec-header{padding:22px 26px 18px;border-bottom:.5px solid var(--border)}
+.rec-cat-eyebrow{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.rec-cat-name{font-size:21px;font-weight:500;letter-spacing:-.3px}
+.rec-cat-desc{font-size:13px;color:var(--text2);margin-top:5px}
+.top-picks{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px 26px 16px}
+@media(max-width:580px){.top-picks{grid-template-columns:1fr}}
+.pick{border-radius:var(--radius-lg);padding:20px;position:relative;border:.5px solid transparent}
+.pick-medal{position:absolute;top:16px;right:16px;font-size:22px}
+.pick-rank{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;opacity:.8}
+.pick-card-name{font-size:17px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}
+.pick-rate{font-size:28px;font-weight:700;letter-spacing:-.8px;margin-bottom:2px;line-height:1}
+.pick-eff{font-size:12px;font-weight:500;margin-bottom:10px}
+.pick-why{font-size:12.5px;line-height:1.6;color:var(--text2)}
+.pick-perks{font-size:12px;margin-top:10px;padding:10px 12px;background:rgba(0,0,0,.05);border-radius:8px;line-height:1.6;color:var(--text2)}
+@media(prefers-color-scheme:dark){.pick-perks{background:rgba(255,255,255,.06)}}
+.rec-divider{height:.5px;background:var(--border);margin:0 26px}
+.ranking-section{padding:18px 26px 22px}
+.rank-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.rank-table{width:100%;border-collapse:collapse;font-size:13px}
+.rank-table th{text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);padding:0 10px 8px;border-bottom:.5px solid var(--border)}
+.rank-table td{padding:10px 10px;border-bottom:.5px solid var(--border);vertical-align:middle}
+.rank-table tr:last-child td{border-bottom:none}
+.rank-table tr:hover td{background:var(--surface2)}
+.rnum{font-size:11px;font-weight:700;width:24px}
+.rname{font-weight:500}
+.rrate{font-weight:600;white-space:nowrap}
+.reff{color:var(--text2);white-space:nowrap;font-size:12px}
+.rwhy{color:var(--text2);font-size:12px}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .7s linear infinite;display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="site-hdr">
+    <div class="site-hdr-row">
+      <div>
+        <div class="site-title">Credit Card Benefits Tracker</div>
+        <div class="site-sub">Vendor-specific perks &amp; spend optimizer — updated May 2026</div>
+      </div>
+      <span style="font-size:11px;color:var(--text3)" id="globalStamp"></span>
+    </div>
+    <nav class="primary-nav">
+      <button class="pnav-btn active" id="nav-cards" onclick="switchView('cards')">Card Benefits</button>
+      <button class="pnav-btn" id="nav-optimizer" onclick="switchView('optimizer')">Spend Optimizer</button>
+    </nav>
+  </header>
+</div>
+
+<!-- ══ VIEW 1: CARD BENEFITS ══ -->
+<div id="view-cards">
+  <div class="wrap">
+    <div class="card-tabs-bar">
+      <div class="card-tabs" id="ctabs"></div>
+      <div id="delConfirm" style="display:none"></div>
+      <div id="addFormPanel" style="display:none"></div>
+    </div>
+    <div class="main" id="card-main"></div>
+  </div>
+</div>
+
+<!-- ══ VIEW 2: SPEND OPTIMIZER ══ -->
+<div id="view-optimizer" style="display:none">
+  <div class="wrap">
+    <p class="opt-intro">Select a spending category to see which card earns the most — ranked by effective percent return, factoring in each program's estimated point value plus any relevant statement credits.</p>
+    <div class="cat-grid" id="catGrid"></div>
+    <div id="recPanel"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════
+   BUILT-IN CARD DATA
+════════════════════════════════ */
+const BUILTIN_CARDS = [
+  {
+    id:'amex-gold',name:'Amex Gold',fullName:'American Express® Gold Card',
+    fee:'$325/yr',color:'#B07C1A',valueBg:'#FEF3C7',valueFg:'#78350F',
+    totalValue:'$620+ est. annual credit value',isBuiltin:true,
+    monthly:[
+      {vendor:'Grubhub, Seamless, Buffalo Wild Wings, Five Guys, Cheesecake Factory, Wonder',amount:'$10/mo',annual:'$120/yr',freq:'Resets monthly',note:'$10 total per month across all eligible vendors. Enrollment required.'},
+      {vendor:"Dunkin'",amount:'$7/mo',annual:'$84/yr',freq:'Resets monthly',note:'At US Dunkin\' locations. Load the app to maximize when traveling.'},
+      {vendor:'Uber Cash',amount:'$10/mo',annual:'$120/yr',freq:'Resets monthly — no rollover',note:'Uber Eats or Uber rides in the US. Must select Amex at checkout.'},
+    ],
+    annual:[
+      {vendor:'Resy restaurants',amount:'$100/yr',annual:'$50 Jan–Jun · $50 Jul–Dec',freq:'Semi-annual',note:'At qualifying US Resy restaurants. Enrollment required.'},
+      {vendor:'Uber One membership',amount:'$96',annual:'One-time (thru Oct 30, 2026)',freq:'Limited-time 2026 offer',note:'Statement credit for annual Uber One membership. Added April 2026.'},
+      {vendor:'Amex Travel hotels',amount:'$100/yr',annual:'Annual',freq:'Annual',note:'2-night+ stay. Fine Hotels + Resorts or The Hotel Collection via Amex Travel.'},
+    ],
+    bonus:[
+      {vendor:'Prepaid hotels (AmexTravel.com)',rate:'5x',note:'NEW April 2026 — upgraded from 2x'},
+      {vendor:'Restaurants worldwide',rate:'4x',note:'Up to $50,000/yr, then 1x'},
+      {vendor:'US Supermarkets',rate:'4x',note:'Up to $25,000/yr, then 1x'},
+      {vendor:'Flights direct or via AmexTravel',rate:'3x',note:''},
+      {vendor:'Car rentals & cruises (AmexTravel)',rate:'2x',note:''},
+    ],
+    status:[{name:'Hertz',tier:'Five Star Status',icon:'🚗'},{name:'Marriott Bonvoy',tier:'Gold Elite',icon:'🏨'}],
+    lounge:null,shopping:[],partners:[],unique:[]
+  },
+  {
+    id:'amex-platinum',name:'Amex Platinum',fullName:'The Platinum Card® from American Express',
+    fee:'$895/yr',color:'#52525B',valueBg:'#F4F4F5',valueFg:'#27272A',
+    totalValue:'$1,500+ est. annual credit value',isBuiltin:true,
+    monthly:[
+      {vendor:'Uber Cash',amount:'$15/mo + $20 Dec bonus',annual:'$200/yr',freq:'Resets monthly',note:'Uber Eats or Uber rides in the US. Enrollment required.'},
+      {vendor:'Digital Entertainment — Disney+, Hulu, Peacock, ESPN+, NYT, Audible, The Atlantic',amount:'$25/mo',annual:'$300/yr',freq:'Resets monthly',note:'Pay directly with the card at each streaming service. Enrollment required.'},
+      {vendor:'Equinox',amount:'$25/mo',annual:'$300/yr',freq:'Resets monthly',note:'At Equinox locations or Equinox+ app. Enrollment required.'},
+      {vendor:'Lululemon',amount:'$25/mo',annual:'$300/yr',freq:'Resets monthly',note:'At Lululemon stores or lululemon.com. Enrollment required.'},
+    ],
+    annual:[
+      {vendor:'Uber One membership',amount:'$120/yr',annual:'Annual',freq:'Annual auto-renewing membership',note:'When paying for Uber One with your Platinum card.'},
+      {vendor:'Saks Fifth Avenue',amount:'$100/yr',annual:'$50 Jan–Jun · $50 Jul–Dec',freq:'Semi-annual',note:'At Saks stores or saks.com. Enrollment required.'},
+      {vendor:'CLEAR Plus',amount:'$209/yr',annual:'Annual',freq:'Annual',note:'Full CLEAR Plus biometric airport security membership.'},
+      {vendor:'Fine Hotels + Resorts / The Hotel Collection',amount:'$600/yr',annual:'$300 Jan–Jun · $300 Jul–Dec',freq:'Semi-annual',note:'Via Amex Travel. 2-night minimum for Hotel Collection.'},
+    ],
+    bonus:[
+      {vendor:'Flights direct with airline or AmexTravel',rate:'5x',note:'Up to $500,000/yr'},
+      {vendor:'Prepaid hotels via AmexTravel',rate:'5x',note:''},
+      {vendor:'Amex Travel — car rentals, cruises',rate:'2x',note:''},
+    ],
+    status:[
+      {name:'Marriott Bonvoy',tier:'Gold Elite',icon:'🏨'},{name:'Hilton Honors',tier:'Gold',icon:'🏨'},
+      {name:'Hertz',tier:"President's Circle",icon:'🚗'},{name:'Avis',tier:'Preferred Plus',icon:'🚗'},
+      {name:'National Car Rental',tier:'Executive Elite',icon:'🚗'},
+    ],
+    lounge:'Centurion Lounges + Priority Pass Select (unlimited) + 10 Delta Sky Club visits/yr + Plaza Premium + other partners. Best lounge stack of any consumer card.',
+    shopping:[],partners:[],unique:[]
+  },
+  {
+    id:'csr',name:'Chase Sapphire Reserve',fullName:'Chase Sapphire Reserve®',
+    fee:'$795/yr',color:'#1A4E8C',valueBg:'#EFF6FF',valueFg:'#1E3A5F',
+    totalValue:'$2,478+ est. annual credit value',isBuiltin:true,
+    monthly:[
+      {vendor:'Lyft',amount:'$10/mo',annual:'$120/yr',freq:'Resets monthly (thru Sep 30, 2027)',note:'In-app credits on Lyft rides. Also earns 5x total points on Lyft. Activation required.'},
+      {vendor:'DoorDash (DashPass promos)',amount:'~$25/mo',annual:'~$300/yr',freq:'Monthly promos (thru Dec 31, 2027)',note:'$5/mo on restaurant orders + two $10/mo promos on grocery & retail. Includes complimentary DashPass ($120/yr value).'},
+      {vendor:'Peloton membership',amount:'$10/mo',annual:'$120/yr',freq:'Resets monthly (thru Dec 31, 2027)',note:'All-Access, Rental, App One, App+, Guide or Strength+ memberships. Activation required.'},
+    ],
+    annual:[
+      {vendor:'Any travel purchase (auto-applies)',amount:'$300/yr',annual:'Anniversary-year reset',freq:'Auto-applies to any travel',note:'Flights, hotels, rideshare, tolls, parking, taxis, trains — virtually any travel MCC qualifies automatically.'},
+      {vendor:'The Edit by Chase Travel (curated hotels)',amount:'$500/yr',annual:'Two credits, flexible timing in 2026',freq:'Semi-annual (2025) · Flexible (2026)',note:'2-night minimum. Earn hotel loyalty points + elite benefits alongside the credit.'},
+      {vendor:'Exclusive Tables dining (OpenTable)',amount:'$300/yr',annual:'$150 Jan–Jun · $150 Jul–Dec',freq:'Semi-annual',note:'Dining credit at Sapphire Reserve Exclusive Tables. One-time enrollment.'},
+      {vendor:'StubHub / viagogo',amount:'$300/yr',annual:'$150 Jan–Jun · $150 Jul–Dec',freq:'Semi-annual (thru Dec 31, 2027)',note:'Concert, sports, and event tickets. One-time activation required.'},
+      {vendor:'Apple TV+ & Apple Music',amount:'~$288/yr',annual:'Complimentary subscriptions',freq:'Ongoing (thru Dec 31, 2027)',note:'Both included free. Activate through the Chase benefits portal.'},
+      {vendor:'Chase Travel — select hotels (IHG, Omni, Virgin)',amount:'$250',annual:'2026-only credit',freq:'2026 one-time bonus',note:'2-night minimum. Separate from The Edit — can be stacked.'},
+    ],
+    bonus:[
+      {vendor:'Chase Travel portal — all travel',rate:'8x',note:''},
+      {vendor:'Peloton equipment & accessories',rate:'10x',note:'Up to 50,000 pts. Thru Dec 2027'},
+      {vendor:'Lyft rides',rate:'5x total',note:'1x base + 4x bonus. Thru Sep 2027'},
+      {vendor:'Dining & delivery worldwide',rate:'3x',note:''},
+      {vendor:'Other travel (flights, hotels booked direct)',rate:'3x',note:''},
+    ],
+    status:[
+      {name:'IHG One Rewards',tier:'Platinum Elite',icon:'🏨'},
+      {name:'Chase Sapphire Lounges + Priority Pass Select',tier:'Unlimited access + 2 guests',icon:'✈️'},
+    ],
+    lounge:'Chase Sapphire Lounge by The Club (DFW; LAX coming 2026) + Priority Pass Select (1,300+ lounges) + Air Canada Maple Leaf Lounges.',
+    shopping:[],partners:[],unique:[]
+  },
+  {
+    id:'cap-one-venture',name:'Capital One Venture',fullName:'Capital One Venture Rewards Credit Card',
+    fee:'$95/yr',color:'#8B1A1A',valueBg:'#FEF2F2',valueFg:'#7F1D1D',
+    totalValue:'$420+ est. annual credit value',isBuiltin:true,
+    monthly:[],
+    annual:[
+      {vendor:'Capital One Travel portal',amount:'$300/yr',annual:'Annual',freq:'Annual (portal bookings only)',note:'Hotels, flights, vacation rentals, rental cars booked via Capital One Travel.'},
+      {vendor:'Global Entry / TSA PreCheck',amount:'$120',annual:'Every 4 years',freq:'Every 4 years',note:'Apply for Global Entry first ($120) — it includes TSA PreCheck and costs more.'},
+    ],
+    bonus:[
+      {vendor:'Capital One Entertainment (concerts, sports, events)',rate:'5x',note:''},
+      {vendor:'Capital One Travel portal — hotels, vacation rentals & cars',rate:'5x',note:''},
+      {vendor:'All other purchases',rate:'2x',note:'Simple flat-rate — no categories needed'},
+    ],
+    status:[{name:'Hertz',tier:'Five Star Status',icon:'🚗'}],
+    lounge:'Capital One Lounges (DFW, DEN, DCA, IAD) — $45/visit discounted rate for Venture cardholders.',
+    shopping:["Adidas","Macy's","Walmart","Lowe's","IHG Hotels","Dell","StubHub"],
+    partners:[],unique:[]
+  },
+  {
+    id:'citi-strata',name:'Citi Strata Premier',fullName:'Citi Strata Premier® Card',
+    fee:'$95/yr',color:'#003B95',valueBg:'#EFF6FF',valueFg:'#1E3A8A',
+    totalValue:'$100+ est. annual credit value',isBuiltin:true,
+    monthly:[],
+    annual:[
+      {vendor:'Citi Travel (hotel)',amount:'$100/yr',annual:'Once per calendar year',freq:'Annual',note:'$100 off a single $500+ hotel stay at cititravel.com. Applied instantly at booking.'},
+    ],
+    bonus:[
+      {vendor:'Citi Travel portal — hotels, car rentals & attractions',rate:'10x',note:''},
+      {vendor:'Air travel, hotels, dining, grocery, gas & EV',rate:'3x',note:'No annual cap — unique among major cards'},
+    ],
+    status:[],lounge:null,shopping:[],
+    partners:[
+      {name:'American AAdvantage',note:'EXCLUSIVE — no other major transferable currency has AA as a partner. Added July 2025.',badge:true},
+      {name:'JetBlue TrueBlue',note:'1:1 transfer ratio'},{name:'Virgin Atlantic Flying Club',note:'1:1 transfer ratio'},
+      {name:'Air France / KLM Flying Blue',note:'1:1 transfer ratio'},{name:'Avianca LifeMiles',note:'1:1 transfer ratio'},
+      {name:'Cathay Pacific Asia Miles',note:'1:1 transfer ratio'},{name:'Singapore Airlines KrisFlyer',note:'1:1 — great for United & Star Alliance'},
+      {name:'Turkish Airlines Miles & Smiles',note:'1:1 — excellent United/Hawaii sweet spots'},
+      {name:'Eva Air',note:'1:1 transfer ratio'},{name:'Wyndham Rewards',note:'1:1 transfer ratio'},
+      {name:'Choice Privileges',note:'1:1 transfer ratio'},{name:'Leading Hotels of the World',note:'Luxury hotel partner'},
+    ],
+    unique:[
+      {name:'Citi Entertainment',note:'Presale tickets to concerts, sports events, comedy & exclusive dining'},
+      {name:'Amazon checkout',note:'Redeem ThankYou Points directly at Amazon.com'},
+      {name:'PayPal checkout',note:'Use ThankYou Points across millions of PayPal merchants'},
+      {name:'CVS.com',note:'Redeem ThankYou Points at CVS online'},
+    ]
+  },
+  {
+    id:'united-club',name:'United Club Infinite',fullName:'United Club℠ Infinite Card',
+    fee:'$695/yr',color:'#005DAA',valueBg:'#EFF6FF',valueFg:'#1E3A8A',
+    totalValue:'$875+ est. annual credit value',isBuiltin:true,
+    monthly:[
+      {vendor:'Rideshare (Lyft, Uber, etc.)',amount:'$12/mo + $18 Dec',annual:'$150/yr',freq:'Resets monthly — yearly opt-in required',note:'Up to $12 back/mo Jan–Nov, $18 back in December. Enrollment + annual opt-in required.'},
+      {vendor:'Instacart',amount:'Two $10/mo',annual:'$240/yr',freq:'Resets monthly (thru Dec 31, 2027)',note:'Two separate $10 Instacart credits per month. Also includes complimentary Instacart+ membership ($99/yr value).'},
+    ],
+    annual:[
+      {vendor:'Renowned Hotels & Resorts (via United)',amount:'$200/yr',annual:'Anniversary year',freq:'Annual',note:'On prepaid hotel stays through Renowned Hotels & Resorts for United cardmembers.'},
+      {vendor:'JSX charter flights',amount:'$200/yr',annual:'Anniversary year',freq:'Annual',note:'Book flights directly with JSX at united.com/JSX. JSX is a semi-private hop-on jet service.'},
+      {vendor:'Avis or Budget car rental',amount:'$100/yr',annual:'$50 per rental × 2 rentals',freq:'Anniversary year',note:'$50 in United TravelBank cash on 1st and 2nd Avis or Budget rental booked via cars.united.com.'},
+    ],
+    bonus:[
+      {vendor:'Eligible United flights',rate:'11x total',note:'6x MileagePlus base + 5x card bonus on United-operated flights'},
+      {vendor:'All other eligible United purchases',rate:'5x',note:''},
+      {vendor:'Renowned Hotels & Resorts (prepaid via United)',rate:'5x',note:''},
+      {vendor:'All other purchases',rate:'1.5x',note:'Simple earn on everyday spend'},
+    ],
+    status:[
+      {name:'United Club℠',tier:'Full membership — 45+ lounges + Star Alliance partners',icon:'✈️'},
+      {name:'Avis',tier:"President's Club (complimentary enrollment)",icon:'🚗'},
+    ],
+    lounge:'United Club℠ full membership — unlimited access to 45+ United Club locations worldwide + participating Star Alliance partner lounges on international routes. 1 adult guest + dependents under 18 included.',
+    shopping:[],partners:[],
+    unique:[
+      {name:'1st & 2nd checked bags free',note:'Cardholder + 1 companion on same reservation. Saves up to $320/roundtrip for two travelers.'},
+      {name:'Premier Access travel services',note:'Priority check-in, security screening, boarding, and baggage handling on all United flights.'},
+      {name:'Premier Qualifying Points boost',note:'1,500 PQP bonus/yr (starting 2026) + 1 PQP per $15 spent, up to 28,000 PQP/yr toward elite status.'},
+      {name:'10% Saver Award discount',note:'10% off United award flights for all United co-brand cardholders.'},
+      {name:'25% back on inflight purchases',note:'Statement credit on United inflight food, beverages, and Wi-Fi.'},
+      {name:'Trip cancellation / interruption',note:'Up to $1,500 per person when you pay with the card.'},
+    ]
+  }
+];
+
+/* ════════════════════════════════
+   SPEND OPTIMIZER DATA
+════════════════════════════════ */
+const CATEGORIES = [
+  {id:'dining',name:'Dining & Restaurants',icon:'🍽️',desc:'Restaurants, bars, cafes, takeout & delivery'},
+  {id:'grocery',name:'Groceries',icon:'🛒',desc:'US supermarkets and grocery stores'},
+  {id:'flights',name:'Flights — Booked Direct',icon:'✈️',desc:'Airline tickets purchased directly with the airline'},
+  {id:'hotels',name:'Hotels — Booked Direct',icon:'🏨',desc:'Hotels booked directly or via AmexTravel'},
+  {id:'portal',name:'Travel Portal Bookings',icon:'🌐',desc:'Flights, hotels & cars via card travel portals'},
+  {id:'rideshare',name:'Rideshare & Transit',icon:'🚕',desc:'Lyft, Uber, taxis, trains, buses, tolls'},
+  {id:'gas',name:'Gas & EV Charging',icon:'⛽',desc:'Gas stations and EV charging networks'},
+  {id:'streaming',name:'Streaming Services',icon:'📺',desc:'Netflix, Disney+, Hulu, Spotify, Apple TV+, etc.'},
+  {id:'entertain',name:'Entertainment & Events',icon:'🎭',desc:'Concerts, sports, shows & event tickets'},
+  {id:'fitness',name:'Fitness & Wellness',icon:'🏋️',desc:'Gyms, Peloton, Lululemon, fitness equipment'},
+  {id:'everyday',name:'Everyday Everything',icon:'💳',desc:'General purchases with no bonus category'},
+];
+
+const RATINGS = {
+  dining:{
+    'amex-gold':      {rate:'4x MR',  eff:6.0,  highlight:'Highest dining rate + layered vendor credits',      perks:'$10/mo at Grubhub, BWW, Five Guys, Cheesecake Factory & Wonder. $7/mo Dunkin\'. $100/yr Resy credit. 4x on all restaurants worldwide (up to $50k/yr).'},
+    'csr':            {rate:'3x UR',  eff:5.25, highlight:'Strong earning + $300/yr Exclusive Tables credit',   perks:'$300/yr Exclusive Tables dining credit via OpenTable. 3x UR on all dining; UR ~1.75¢/pt = 5.25% effective.'},
+    'citi-strata':    {rate:'3x TY',  eff:4.8,  highlight:'Uncapped 3x — no annual spending limit',             perks:'No cap on 3x dining. Beats Amex Gold if dining spend exceeds $25k/yr.'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Flat-rate simplicity',                               perks:'2x on all dining. Capital One Dining access for curated restaurant experiences.'},
+    'united-club':    {rate:'1.5x Miles',eff:1.95,highlight:'Weak for dining; no dining bonus category',       perks:'Only 1.5x on dining purchases. Use a dedicated dining card instead.'},
+    'amex-platinum':  {rate:'1x MR',  eff:1.5,  highlight:'Not optimized for dining spend',                    perks:'Use a different card for restaurant purchases.'},
+  },
+  grocery:{
+    'amex-gold':      {rate:'4x MR',  eff:6.0,  highlight:'Best rate at US supermarkets (up to $25k/yr)',       perks:'4x at US supermarkets on up to $25,000/yr, then 1x. Best for most households.'},
+    'citi-strata':    {rate:'3x TY',  eff:4.8,  highlight:'Uncapped 3x — better for high grocery spenders',    perks:'No annual cap on grocery earning. Surpasses Amex Gold above $25k/yr (~$2,083/mo).'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Flat 2x on all grocery spend',                      perks:'Flat 2x on all purchases including groceries.'},
+    'united-club':    {rate:'1.5x Miles',eff:1.95,highlight:'Flat 1.5x on all non-United purchases',           perks:'No grocery bonus category. Use Amex Gold or Citi Strata instead.'},
+    'csr':            {rate:'1x UR',  eff:1.75, highlight:'Weak for groceries',                                 perks:'Only 1x on grocery spend. Use Amex Gold or Citi Strata instead.'},
+    'amex-platinum':  {rate:'1x MR',  eff:1.5,  highlight:'Not designed for grocery earning',                  perks:'Only 1x at supermarkets.'},
+  },
+  flights:{
+    'amex-platinum':  {rate:'5x MR',  eff:7.5,  highlight:'Best for non-United direct airline purchases',       perks:'5x on flights booked directly with airlines or AmexTravel (up to $500k/yr). Centurion Lounges, Priority Pass, Delta Sky Club.'},
+    'united-club':    {rate:'11x Miles',eff:14.3,highlight:'Unbeatable on United flights — 11x = ~14% back',   perks:'11x total miles on eligible United flights (6x MileagePlus base + 5x card bonus). Includes free 1st & 2nd checked bags + United Club access. Only applies to United-operated flights.'},
+    'csr':            {rate:'3x UR',  eff:5.25, highlight:'Strong 3x UR + $300 travel credit',                  perks:'3x on all travel. UR worth ~1.75¢ = 5.25% effective. $300 annual travel credit offsets the fee.'},
+    'citi-strata':    {rate:'3x TY',  eff:4.8,  highlight:'Uncapped 3x on all air travel',                      perks:'3x on air travel, uncapped. TY ~1.6¢/pt = 4.8% effective.'},
+    'amex-gold':      {rate:'3x MR',  eff:4.5,  highlight:'Solid 3x on flights',                                perks:'3x on flights booked directly with airlines or via AmexTravel.'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Flat-rate earning',                                  perks:'Flat 2x on all flight purchases.'},
+  },
+  hotels:{
+    'amex-platinum':  {rate:'5x MR',  eff:7.5,  highlight:'Best for hotels — FHR perks + $600/yr credits',      perks:'5x on prepaid hotels via AmexTravel. $600/yr hotel credits. Marriott Gold + Hilton Gold status.'},
+    'amex-gold':      {rate:'5x MR',  eff:7.5,  highlight:'NEW April 2026 — upgraded to 5x via AmexTravel',     perks:'5x on prepaid hotels via AmexTravel.com (upgraded from 2x). $100/yr hotel credit.'},
+    'united-club':    {rate:'5x Miles',eff:6.5,  highlight:'5x on Renowned Hotels via United + $200/yr credit', perks:'5x on prepaid Renowned Hotels & Resorts stays booked via United. $200/yr hotel credit. United Club access for travel days.'},
+    'csr':            {rate:'3x UR',  eff:5.25, highlight:'3x + $500/yr The Edit hotel credit',                  perks:'3x on hotel purchases. $500/yr The Edit by Chase Travel credit. IHG Platinum Elite status.'},
+    'citi-strata':    {rate:'3x TY',  eff:4.8,  highlight:'3x on hotels + $100/yr credit',                      perks:'3x on hotels + $100/yr hotel credit ($500+ stay via Citi Travel).'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Flat 2x + $300 portal credit',                       perks:'2x on hotel purchases. $300/yr Capital One Travel credit.'},
+  },
+  portal:{
+    'citi-strata':    {rate:'10x TY', eff:16.0, highlight:'Highest portal earn rate — 10x = 16% effective',     perks:'10x ThankYou Points on hotels, car rentals & attractions via Citi Travel. At 1.6¢/pt = 16% effective return.'},
+    'csr':            {rate:'8x UR',  eff:14.0, highlight:'8x UR — UR worth more per point',                    perks:'8x on all travel via Chase Travel portal. At 1.75¢/pt = 14% effective.'},
+    'cap-one-venture':{rate:'5x Miles',eff:8.5, highlight:'5x on Capital One Travel',                           perks:'5x miles on hotels, vacation rentals & rental cars via Capital One Travel. At 1.7¢/mile = 8.5% effective.'},
+    'amex-platinum':  {rate:'5x MR',  eff:7.5,  highlight:'5x via AmexTravel',                                  perks:'5x on flights & prepaid hotels via AmexTravel.com.'},
+    'amex-gold':      {rate:'5x MR',  eff:7.5,  highlight:'5x on AmexTravel hotels (NEW April 2026)',           perks:'5x on prepaid hotels via AmexTravel.com.'},
+    'united-club':    {rate:'N/A',    eff:0,    highlight:'No general travel portal earning',                   perks:'United card earns on United bookings directly, not a general OTA portal.'},
+  },
+  rideshare:{
+    'csr':            {rate:'5x UR (Lyft)',eff:8.75,highlight:'Best rideshare card — earn + $120/yr Lyft credit',perks:'5x total on Lyft (thru Sep 2027) + $10/mo Lyft in-app credits ($120/yr). Also 3x on all other transit.'},
+    'united-club':    {rate:'1.5x + credit',eff:4.0,highlight:'$150/yr rideshare credit offsets Uber/Lyft costs',perks:'$12/mo rideshare credit ($150/yr total — $18 in Dec). Yearly opt-in required. Credit nearly pays for 1–2 rides/mo on its own.'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Flat 2x on all rideshare & transit',                perks:'Flat 2x miles on rideshare and transit. Simple and consistent.'},
+    'amex-platinum':  {rate:'1x MR',  eff:1.5,  highlight:'Uber Cash offsets costs',                            perks:'Only 1x earn rate, but $200/yr Uber Cash significantly offsets the cost of Uber rides.'},
+    'amex-gold':      {rate:'1x MR',  eff:1.5,  highlight:'Uber Cash helps',                                    perks:'$10/mo Uber Cash offsets Uber costs. Just 1x earn rate on rides.'},
+    'citi-strata':    {rate:'1x TY',  eff:1.6,  highlight:'Weak for rideshare',                                 perks:'Only 1x on transit and rideshare.'},
+  },
+  gas:{
+    'citi-strata':    {rate:'3x TY',  eff:4.8,  highlight:'Best gas & EV card — uncapped 3x',                  perks:'3x on gas stations and EV charging nationwide. No annual cap. At 1.6¢/pt = 4.8% effective.'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Flat 2x on gas & EV',                               perks:'Flat 2x miles on all gas and EV charging purchases.'},
+    'united-club':    {rate:'1.5x Miles',eff:1.95,highlight:'Flat 1.5x on non-United purchases',              perks:'No gas bonus. Use Citi Strata or Capital One Venture instead.'},
+    'csr':            {rate:'1x UR',  eff:1.75, highlight:'Weak for gas',                                      perks:'Only 1x on gas. Citi Strata is much better here.'},
+    'amex-gold':      {rate:'1x MR',  eff:1.5,  highlight:'Weak for gas',                                      perks:'Only 1x on gas purchases.'},
+    'amex-platinum':  {rate:'1x MR',  eff:1.5,  highlight:'Weak for gas',                                      perks:'Only 1x on gas purchases.'},
+  },
+  streaming:{
+    'amex-platinum':  {rate:'$25/mo credit',eff:99.0,highlight:'Effectively free streaming — $300/yr credit',  perks:'$25/mo credit for Disney+, Hulu, Peacock, ESPN+, NYT, Audible & The Atlantic. Essentially 100% back on up to $300/yr of streaming.'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Best earn rate on ALL streaming services',          perks:'Flat 2x on any streaming service — Netflix, Spotify, Apple TV+, YouTube Premium, etc.'},
+    'csr':            {rate:'1x UR + Apple',eff:2.5,highlight:'Free Apple TV+ & Apple Music included',        perks:'Complimentary Apple TV+ and Apple Music (thru Dec 2027). 1x on other streaming.'},
+    'united-club':    {rate:'1.5x Miles',eff:1.95,highlight:'1.5x on all non-United purchases',              perks:'No streaming bonus. Amex Platinum is far superior for streaming spend.'},
+    'citi-strata':    {rate:'1x TY',  eff:1.6,  highlight:'Weak for streaming',                               perks:'Only 1x on streaming. Use Amex Platinum for covered services.'},
+    'amex-gold':      {rate:'1x MR',  eff:1.5,  highlight:'Weak for streaming',                               perks:'Only 1x on streaming purchases.'},
+  },
+  entertain:{
+    'cap-one-venture':{rate:'5x Miles',eff:8.5, highlight:'Best earn rate via Capital One Entertainment',      perks:'5x miles on concerts, sports & events via Capital One Entertainment (exclusive pre-sales, suite experiences). At 1.7¢ = 8.5% effective.'},
+    'csr':            {rate:'3x UR',  eff:5.25, highlight:'$300/yr StubHub credit + 3x earning',               perks:'$300/yr StubHub & viagogo credits ($150 semi-annually, thru Dec 2027). Plus 3x UR on entertainment.'},
+    'citi-strata':    {rate:'1x TY',  eff:1.6,  highlight:'Citi Entertainment presale access',                 perks:'Citi Entertainment program for presale tickets and exclusive experiences. Just 1x earn rate.'},
+    'united-club':    {rate:'1.5x Miles',eff:1.95,highlight:'1.5x on entertainment; no special perks',       perks:'No entertainment bonus category. Use Capital One Venture or CSR instead.'},
+    'amex-gold':      {rate:'1x MR',  eff:1.5,  highlight:'Weak for entertainment',                           perks:'Only 1x on entertainment spend.'},
+    'amex-platinum':  {rate:'1x MR',  eff:1.5,  highlight:'Weak for entertainment',                           perks:'Only 1x on entertainment purchases.'},
+  },
+  fitness:{
+    'amex-platinum':  {rate:'$600/yr credits',eff:99.0,highlight:'Unmatched — $300 Equinox + $300 Lululemon', perks:'$300/yr Equinox credit ($25/mo) + $300/yr Lululemon credit ($25/mo). These two credits alone nearly offset the $895 annual fee.'},
+    'csr':            {rate:'$120/yr + 10x',eff:15.0, highlight:'$120/yr Peloton credit + 10x on hardware',   perks:'$10/mo Peloton membership credit ($120/yr). 10x points on Peloton equipment & accessories (up to 50,000 pts, thru Dec 2027).'},
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Flat 2x on fitness spend',                         perks:'2x on gym memberships, fitness equipment, wellness apps, etc.'},
+    'united-club':    {rate:'1.5x Miles',eff:1.95,highlight:'1.5x on fitness; no special perks',             perks:'No fitness bonus. Use Amex Platinum or CSR instead.'},
+    'citi-strata':    {rate:'1x TY',  eff:1.6,  highlight:'Weak for fitness',                                 perks:'Only 1x on fitness purchases.'},
+    'amex-gold':      {rate:'1x MR',  eff:1.5,  highlight:'Weak for fitness',                                 perks:'Only 1x on fitness purchases.'},
+  },
+  everyday:{
+    'cap-one-venture':{rate:'2x Miles',eff:3.4, highlight:'Best flat-rate card — 2x on absolutely everything', perks:'Flat 2x miles on every purchase with no categories, caps, or restrictions. At ~1.7¢/mile = 3.4% effective. $95 fee with $300 portal credit.'},
+    'united-club':    {rate:'1.5x Miles',eff:1.95,highlight:'Solid 1.5x flat-rate on all non-United spend',  perks:'1.5x on everything else. Better than most 1x cards, but worse than Capital One Venture\'s 2x. Best card if you already have the United Club membership.'},
+    'csr':            {rate:'1x UR',  eff:1.75, highlight:'1x UR worth more per point than other 1x cards',   perks:'1x on general purchases, but UR worth ~1.75¢ = better than other 1x programs.'},
+    'citi-strata':    {rate:'1x TY',  eff:1.6,  highlight:'Best bonus categories of any $95 card',            perks:'1x on general purchases, but 3x on dining, grocery, gas & travel (all uncapped).'},
+    'amex-gold':      {rate:'1x MR',  eff:1.5,  highlight:'Only 1x on non-bonus spend',                       perks:'Stick to 4x dining and grocery categories. Use a flat-rate card for everything else.'},
+    'amex-platinum':  {rate:'1x MR',  eff:1.5,  highlight:'Weakest for general spend',                        perks:'A benefits card, not a spending card. Value comes from credits, not earning rates.'},
+  },
+};
+
+/* ════════════════════════════════
+   STATE + PERSISTENCE
+════════════════════════════════ */
+const STORAGE_KEY = 'cc_tracker_cards_v2';
+let CARDS = [];
+let activeCard = null;
+let selectedCat = null;
+let aiUpdates = {};
+let lastChecked = {};
+let currentView = 'cards';
+let pendingDelete = null;
+let showAddForm = false;
+
+function loadCards(){
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed && parsed.length > 0){ CARDS = parsed; return; }
+    }
+  }catch(e){}
+  CARDS = JSON.parse(JSON.stringify(BUILTIN_CARDS));
+}
+
+function saveCards(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(CARDS)); }catch(e){}
+}
+
+function cardById(id){ return CARDS.find(c=>c.id===id); }
+function cardShortName(id){ return cardById(id)?.name || id; }
+
+function hexToRgba(hex,alpha){
+  hex = hex.replace('#','');
+  if(hex.length===3) hex=hex.split('').map(x=>x+x).join('');
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function lightenHex(hex){
+  // produce a light bg and dark text from color
+  hex = hex.replace('#','');
+  if(hex.length===3) hex=hex.split('').map(x=>x+x).join('');
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  const bg=`rgba(${r},${g},${b},0.1)`;
+  return {bg, fg:hex};
+}
+
+/* ════════════════════════════════
+   ICONS
+════════════════════════════════ */
+const ico=(d)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0">${d}</svg>`;
+const icoMonth  =()=>ico('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>');
+const icoAnnual =()=>ico('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>');
+const icoStar   =()=>ico('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>');
+const icoAward  =()=>ico('<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>');
+const icoLounge =()=>ico('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.9 19.79 19.79 0 0 1 1.61 5.27 2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.61a16 16 0 0 0 6 6l1.27-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 17.92z"/>');
+const icoShop   =()=>ico('<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>');
+const icoXfer   =()=>ico('<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>');
+const icoInfo   =()=>ico('<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>');
+const icoAI     =()=>ico('<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/>');
+const icoRefresh=()=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+
+/* ════════════════════════════════
+   VIEW SWITCHING
+════════════════════════════════ */
+function switchView(v){
+  currentView=v;
+  document.getElementById('view-cards').style.display = v==='cards'?'':'none';
+  document.getElementById('view-optimizer').style.display = v==='optimizer'?'':'none';
+  document.getElementById('nav-cards').classList.toggle('active',v==='cards');
+  document.getElementById('nav-optimizer').classList.toggle('active',v==='optimizer');
+}
+
+/* ════════════════════════════════
+   TABS + DELETE + ADD FORM
+════════════════════════════════ */
+function renderTabs(){
+  const tabs = CARDS.map(c=>{
+    const isActive = c.id===activeCard?.id;
+    const activeStyle = isActive ? `background:${c.color};border-color:${c.color}` : '';
+    return `<div class="ctab-wrap">
+      <button class="ctab${isActive?' active':''}" style="${activeStyle}" onclick="setCard('${c.id}')">${c.name}</button>
+      <button class="ctab-del" onclick="askDelete('${c.id}')" title="Delete card" aria-label="Delete ${c.name}">×</button>
+    </div>`;
+  }).join('');
+
+  document.getElementById('ctabs').innerHTML = tabs +
+    `<button class="add-card-btn" onclick="toggleAddForm()">+ Add card</button>`;
+
+  // delete confirm
+  const dc = document.getElementById('delConfirm');
+  if(pendingDelete){
+    const card = cardById(pendingDelete);
+    dc.style.display='';
+    dc.innerHTML=`<div class="del-confirm">
+      <div class="del-confirm-text">Delete <strong>${card?.name||pendingDelete}</strong>? This cannot be undone.</div>
+      <button class="del-btn del-btn-confirm" onclick="confirmDelete()">Delete</button>
+      <button class="del-btn del-btn-cancel" onclick="cancelDelete()">Cancel</button>
+    </div>`;
+  } else { dc.style.display='none'; dc.innerHTML=''; }
+
+  // add form
+  const afp = document.getElementById('addFormPanel');
+  if(showAddForm){
+    afp.style.display='';
+    afp.innerHTML=`<div class="add-form-panel">
+      <div class="add-form-title">+ Add a new card</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Short name (tab label)</label>
+          <input type="text" id="f-name" placeholder="e.g. Chase Sapphire Preferred" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label>Full card name</label>
+          <input type="text" id="f-fullname" placeholder="e.g. Chase Sapphire Preferred® Card" maxlength="60">
+        </div>
+        <div class="form-group">
+          <label>Annual fee</label>
+          <input type="text" id="f-fee" placeholder="e.g. $95/yr" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label>Estimated annual value</label>
+          <input type="text" id="f-value" placeholder="e.g. $500+ est. annual credit value" maxlength="40">
+        </div>
+        <div class="form-group">
+          <label>Card accent color</label>
+          <input type="color" id="f-color" value="#1A4E8C">
+          <span class="form-hint">Used for tab and benefit highlights</span>
+        </div>
+      </div>
+      <div class="form-hint" style="margin-bottom:12px">After adding, use <strong>Check for updates ↗</strong> on the card to auto-populate its latest benefits via web search.</div>
+      <div class="form-actions">
+        <button class="form-save" onclick="saveNewCard()">Add card</button>
+        <button class="form-cancel" onclick="cancelAddForm()">Cancel</button>
+      </div>
+      <div id="form-error" class="form-error"></div>
+    </div>`;
+  } else { afp.style.display='none'; afp.innerHTML=''; }
+}
+
+function setCard(id){
+  activeCard = cardById(id);
+  pendingDelete = null;
+  showAddForm = false;
+  renderTabs();
+  renderCardContent();
+}
+
+function askDelete(id){
+  if(CARDS.length <= 1){ alert('You must have at least one card.'); return; }
+  pendingDelete = id;
+  showAddForm = false;
+  renderTabs();
+}
+
+function cancelDelete(){ pendingDelete = null; renderTabs(); }
+
+function confirmDelete(){
+  const id = pendingDelete;
+  const idx = CARDS.findIndex(c=>c.id===id);
+  CARDS.splice(idx, 1);
+  saveCards();
+  pendingDelete = null;
+  // pick adjacent card
+  const newIdx = Math.min(idx, CARDS.length-1);
+  activeCard = CARDS[newIdx];
+  renderTabs();
+  renderCardContent();
+}
+
+function toggleAddForm(){
+  showAddForm = !showAddForm;
+  pendingDelete = null;
+  renderTabs();
+  if(showAddForm){
+    setTimeout(()=>{ document.getElementById('f-name')?.focus(); },50);
+  }
+}
+
+function cancelAddForm(){ showAddForm = false; renderTabs(); }
+
+function saveNewCard(){
+  const name = document.getElementById('f-name')?.value.trim();
+  const fullName = document.getElementById('f-fullname')?.value.trim();
+  const fee = document.getElementById('f-fee')?.value.trim();
+  const totalValue = document.getElementById('f-value')?.value.trim();
+  const color = document.getElementById('f-color')?.value || '#1A4E8C';
+  const errEl = document.getElementById('form-error');
+
+  if(!name){ errEl.textContent='Short name is required.'; return; }
+  if(!fullName){ errEl.textContent='Full card name is required.'; return; }
+
+  const id = 'custom-' + Date.now();
+  // derive light bg from color
+  const newCard = {
+    id, name, fullName,
+    fee: fee||'N/A',
+    color,
+    valueBg: hexToRgba(color, 0.15),
+    valueFg: color,
+    totalValue: totalValue||'',
+    isBuiltin: false,
+    monthly:[], annual:[], bonus:[], status:[],
+    lounge:null, shopping:[], partners:[], unique:[]
+  };
+
+  CARDS.push(newCard);
+  saveCards();
+  showAddForm = false;
+  activeCard = newCard;
+  renderTabs();
+  renderCardContent();
+}
+
+/* ════════════════════════════════
+   CARD BENEFITS VIEW
+════════════════════════════════ */
+function section(title,icon,html){ return `<div class="section"><div class="sec-title">${icon} ${title}</div>${html}</div>`; }
+
+function benGrid(items,cardColor){
+  return `<div class="bg">${items.map(b=>`
+    <div class="ben">
+      <div class="ben-top"><div class="ben-vendor">${b.vendor}</div><div class="ben-amount" style="color:${cardColor}">${b.amount||b.rate}</div></div>
+      ${b.annual?`<div class="ben-freq">${b.annual} · ${b.freq}</div>`:''}
+      ${b.freq&&!b.annual?`<div class="ben-freq">${b.freq}</div>`:''}
+      ${b.note?`<div class="ben-note">${b.note}</div>`:''}
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderCardContent(){
+  if(!activeCard){ document.getElementById('card-main').innerHTML=''; return; }
+  const c=activeCard, aid=c.id, upd=aiUpdates[aid], checked=lastChecked[aid];
+  const isCustom = !c.isBuiltin;
+  const hasNoData = isCustom && !c.monthly.length && !c.annual.length && !c.bonus.length && !c.status.length;
+
+  document.getElementById('card-main').innerHTML=`
+    <div class="card-hdr">
+      <div>
+        <div class="card-name">${c.fullName}</div>
+        <div class="card-fee-row">
+          <span class="card-fee">Annual fee: ${c.fee}</span>
+          ${c.totalValue?`<span class="card-val-badge" style="background:${c.valueBg||hexToRgba(c.color,0.12)};color:${c.color}">${c.totalValue}</span>`:''}
+        </div>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshBenefits()">${icoRefresh()} Check for updates ↗</button>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Monthly credits</div><div class="metric-val" style="color:${c.color}">${c.monthly.length}</div></div>
+      <div class="metric"><div class="metric-lbl">Annual / semi-annual</div><div class="metric-val" style="color:${c.color}">${c.annual.length}</div></div>
+      <div class="metric"><div class="metric-lbl">Partner statuses</div><div class="metric-val" style="color:${c.color}">${c.status.length}</div></div>
+      <div class="metric"><div class="metric-lbl">Total credit sources</div><div class="metric-val" style="color:${c.color}">${c.monthly.length+c.annual.length}</div></div>
+    </div>
+
+    ${hasNoData ? `<div class="custom-empty">No benefit details added yet.<br>Click <strong>Check for updates ↗</strong> above to search the web and auto-populate this card's latest benefits.</div>` : ''}
+
+    ${c.monthly.length ? section('Monthly credits — reset every month',icoMonth(),benGrid(c.monthly,c.color)) : ''}
+    ${c.annual.length  ? section('Annual &amp; semi-annual credits',icoAnnual(),benGrid(c.annual,c.color)) : ''}
+    ${c.bonus&&c.bonus.length ? section('Bonus earning rates',icoStar(),benGrid(c.bonus,c.color)) : ''}
+
+    ${c.status&&c.status.length ? section('Complimentary partner status',icoAward(),`
+      <div class="status-grid">${c.status.map(s=>`
+        <div class="status-item">
+          <div class="status-ico">${s.icon}</div>
+          <div><div class="status-name">${s.name}</div><div class="status-tier">${s.tier}</div></div>
+        </div>`).join('')}
+      </div>`) : ''}
+
+    ${c.lounge ? section('Airport lounge access',icoLounge(),`<div class="lounge-box"><span style="font-size:18px;flex-shrink:0">✈️</span><span>${c.lounge}</span></div>`) : ''}
+
+    ${c.unique&&c.unique.length ? section('Additional card perks',icoInfo(),`
+      <div class="perk-list">${c.unique.map(p=>`
+        <div class="perk-item">
+          <div class="perk-ico">✦</div>
+          <div><strong style="font-size:13px">${p.name}</strong><br><span style="font-size:12px">${p.note}</span></div>
+        </div>`).join('')}
+      </div>`) : ''}
+
+    ${c.shopping&&c.shopping.length ? section('Shopping portal partners',icoShop(),`<div class="shop-chips">${c.shopping.map(s=>`<span class="chip">${s}</span>`).join('')}</div>`) : ''}
+
+    ${c.partners&&c.partners.length ? section('Transfer partners — ThankYou® Points',icoXfer(),`
+      <div class="partner-grid">${c.partners.map(p=>`
+        <div class="partner">
+          ${p.badge?'<span class="excl-badge">★ EXCLUSIVE</span>':''}
+          <div class="partner-name">${p.name}</div>
+          <div class="partner-note">${p.note}</div>
+        </div>`).join('')}
+      </div>`) : ''}
+
+    <div class="section">
+      <div class="sec-title">${icoAI()} AI benefit update check</div>
+      ${upd ? `<div class="ai-box"><div class="ai-box-hdr">Latest update — web search sourced</div><div class="ai-content">${upd}</div>${checked?`<div class="ai-stamp">Last checked: ${checked}</div>`:''}</div>`
+            : `<p class="ai-hint">Click <strong>Check for updates ↗</strong> to search the web for the latest benefit changes${isCustom?' and populate this card\'s benefits':' for this card'}. Run monthly before your credits reset.</p>`}
+    </div>`;
+}
+
+async function refreshBenefits(){
+  const btn=document.getElementById('refreshBtn');
+  if(!btn||btn.disabled) return;
+  btn.disabled=true;
+  btn.innerHTML=`<span class="spin">${icoRefresh()}</span> Searching…`;
+  const aid=activeCard.id;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:`Search for the LATEST 2025 or 2026 benefit changes for the ${activeCard.fullName}. Focus on: (1) specific merchant or vendor credits with amounts and reset frequencies, (2) new or removed vendor partnerships, (3) bonus earning rates. Give a concise, direct summary. Plain prose only.`}]
+      })});
+    const data=await resp.json();
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ').trim();
+    aiUpdates[aid]=text
+      ? text.replace(/\n\n/g,'</p><p style="margin-top:10px">').replace(/\n/g,' ').replace(/^/,'<p>').replace(/$/,'</p>')
+      : '<p style="color:var(--text2)">No major recent changes found. Benefits appear current.</p>';
+  }catch(e){ aiUpdates[aid]='<p style="color:var(--text2)">Update check unavailable. Please verify directly at the card issuer\'s website.</p>'; }
+  lastChecked[aid]=new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+  document.getElementById('globalStamp').textContent='Last checked: '+lastChecked[aid];
+  renderCardContent();
+}
+
+/* ════════════════════════════════
+   SPEND OPTIMIZER VIEW
+════════════════════════════════ */
+function renderCatGrid(){
+  document.getElementById('catGrid').innerHTML=CATEGORIES.map(cat=>`
+    <div class="cat-tile${selectedCat===cat.id?' sel':''}"
+      ${selectedCat===cat.id?'style="border-color:var(--text)"':''}
+      onclick="selectCat('${cat.id}')">
+      <div class="cat-ico">${cat.icon}</div>
+      <div class="cat-name">${cat.name}</div>
+      <div class="cat-desc">${cat.desc}</div>
+    </div>`).join('');
+}
+
+function selectCat(id){
+  selectedCat=id;
+  renderCatGrid();
+  renderRec(id);
+  document.getElementById('recPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderRec(catId){
+  const cat=CATEGORIES.find(c=>c.id===catId);
+  const ratings=RATINGS[catId];
+  if(!cat||!ratings){document.getElementById('recPanel').innerHTML='';return;}
+
+  const sorted=Object.entries(ratings).map(([cid,r])=>({cid,...r})).sort((a,b)=>b.eff-a.eff);
+  const [p1,p2,...rest]=sorted;
+
+  function effLabel(eff){ return eff>=50?'Credit-based value':eff===0?'No earning rate':eff.toFixed(1)+'% effective return'; }
+  function medal(i){ return ['🥇','🥈','🥉'][i]||''; }
+
+  function renderPick(item,rank){
+    const builtinCard = BUILTIN_CARDS.find(c=>c.id===item.cid);
+    const cardColor = builtinCard?.color||'#888';
+    const bg=hexToRgba(cardColor,rank===0?0.1:0.06);
+    const br=hexToRgba(cardColor,rank===0?0.35:0.18);
+    return `<div class="pick" style="background:${bg};border-color:${br}">
+      <div class="pick-medal">${medal(rank)}</div>
+      <div class="pick-rank" style="color:${cardColor}">${rank===0?'Best pick':'Runner-up'}</div>
+      <div class="pick-card-name">${builtinCard?.name||item.cid}</div>
+      <div class="pick-rate" style="color:${cardColor}">${item.rate}</div>
+      <div class="pick-eff" style="color:${cardColor}">${effLabel(item.eff)}</div>
+      <div class="pick-why">${item.highlight}</div>
+      ${item.perks?`<div class="pick-perks">${item.perks}</div>`:''}
+    </div>`;
+  }
+
+  document.getElementById('recPanel').innerHTML=`
+    <div class="rec-panel">
+      <div class="rec-header">
+        <div class="rec-cat-eyebrow">Best card for</div>
+        <div class="rec-cat-name">${cat.icon} ${cat.name}</div>
+        <div class="rec-cat-desc">${cat.desc} — ranked by effective % return (rate × estimated point value)</div>
+      </div>
+      <div class="top-picks">${renderPick(p1,0)}${renderPick(p2,1)}</div>
+      <div class="rec-divider"></div>
+      <div class="ranking-section">
+        <div class="rank-title">Full ranking — all 6 built-in cards</div>
+        <table class="rank-table">
+          <thead><tr>
+            <th style="width:28px">#</th><th>Card</th><th>Earn rate</th><th>Effective return</th><th>Why</th>
+          </tr></thead>
+          <tbody>${sorted.map((item,i)=>{
+            const bc=BUILTIN_CARDS.find(c=>c.id===item.cid);
+            const clr=bc?.color||'#888';
+            return `<tr>
+              <td class="rnum" style="color:${clr}">${i+1}</td>
+              <td><span class="rname">${bc?.name||item.cid}</span></td>
+              <td><span class="rrate" style="color:${clr}">${item.rate}</span></td>
+              <td class="reff">${effLabel(item.eff)}</td>
+              <td class="rwhy">${item.highlight}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+        <p style="font-size:11px;color:var(--text3);margin-top:12px">Custom cards you add are not included in the optimizer rankings.</p>
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+loadCards();
+activeCard = CARDS[0] || null;
+renderTabs();
+renderCardContent();
+renderCatGrid();
+</script>
+</body>
+</html>
